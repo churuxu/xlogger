@@ -8,6 +8,10 @@
 #include <string.h>
 #include <stdlib.h>
 
+#ifdef _WIN32
+#include <tchar.h>
+#include <windows.h>
+#endif
 
 
 using namespace std;
@@ -229,24 +233,66 @@ int xlogger_init(xlogger_config* conf) {
 	return ret;
 }
 
+
+static void write_to_file(const string& data) {
+	befor_write_file_log();
+	if (fp_) {
+		fwrite(data.c_str(), 1, data.length(), fp_);
+		fflush(fp_);
+	}
+}
+
+#ifdef _WIN32
+
+static void write_to_console(const string& data) {
+	int sz = data.length() * 2 + 4;
+	wchar_t* buf = (wchar_t*)malloc(sz);
+	DWORD wrt = 0;
+	buf[0] = 0;
+	int len = MultiByteToWideChar(CP_UTF8, 0, data.c_str(), data.length(), buf, sz);
+	if (len > 0)buf[len] = 0;
+	//wprintf(L"%s", buf);
+	WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), buf, len, &wrt, NULL);
+	free(buf);
+}
+
+static void write_to_debugger(const string& data) {
+	int sz = data.length() * 2 + 4;
+	wchar_t* buf = (wchar_t*)malloc(sz);
+	buf[0] = 0;
+	int len = MultiByteToWideChar(CP_UTF8, 0, data.c_str(), data.length(), buf, sz);
+	if (len > 0)buf[len] = 0;
+	OutputDebugStringW(buf);
+	free(buf);	
+}
+
+#else
+
+static void write_to_console(const string& data) {
+	printf("%s", data.c_str());
+}
+
+static void write_to_debugger(const string& data) {
+
+}
+#endif
+
+
 /** 写日志 */
 void xlogger_write(int level, const char* msg) {
 	if (level < loglevel_)return;
 	string data = format_log(level, msg);
 	if (logflag_ & XLOGGER_FLAG_USE_CONSOLE){
 		//输出到控制台
-		printf("%s", data.c_str());
+		write_to_console(data);
 	}
 	if (logflag_ & XLOGGER_FLAG_USE_DEBUGGER) {		
-		//TODO 输出到调试器
+		//输出到调试器
+		write_to_debugger(data);
 	}
 	if (logflag_ & XLOGGER_FLAG_USE_FILE) {
 		//输出到文件
-		befor_write_file_log();
-		if (fp_) {
-			fwrite(data.c_str(), 1, data.length(), fp_);
-			fflush(fp_);
-		}
+		write_to_file(data);
 	}
 	lastdate_ = format_now_date();
 }

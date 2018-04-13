@@ -38,10 +38,10 @@ extern "C" {
 
 
 //±„Ω› π”√∫Í
-#define LOGD(msg)  xlogger_write(XLOGGER_LEVEL_DEBUG, msg)
-#define LOGI(msg)  xlogger_write(XLOGGER_LEVEL_INFO, msg)
-#define LOGW(msg)  xlogger_write(XLOGGER_LEVEL_WARN, msg)
-#define LOGE(msg)  xlogger_write(XLOGGER_LEVEL_ERROR, msg)
+#define LOGD(msg)  xlogger_write(XLOGGER_LEVEL_DEBUG, (char*)(msg))
+#define LOGI(msg)  xlogger_write(XLOGGER_LEVEL_INFO, (char*)(msg))
+#define LOGW(msg)  xlogger_write(XLOGGER_LEVEL_WARN,(char*)(msg))
+#define LOGE(msg)  xlogger_write(XLOGGER_LEVEL_ERROR, (char*)(msg))
 #define LOG(msg) LOGI(msg)
 
 #ifdef __cplusplus
